@@ -52,8 +52,12 @@ hexo.extend.generator.register('post', locals => {
     if (!coverVal) {
       const { cover: { default_cover: defaultCover } } = hexo.theme.config
       const randomCover = getRandomCover(defaultCover)
-      data.cover = randomCover
-      coverVal = randomCover // update coverVal
+      // Keep remote random covers unique per post so browser/CDN caches do not
+      // make every post display the same image.
+      const cacheKey = encodeURIComponent(data.path || data.slug || data.title || '')
+      const separator = randomCover && randomCover.includes('?') ? '&' : '?'
+      data.cover = randomCover && cacheKey ? `${randomCover}${separator}post=${cacheKey}` : randomCover
+      coverVal = data.cover // update coverVal
     }
 
     if (coverVal && (coverVal.indexOf('//') !== -1 || imgTestReg.test(coverVal))) {
